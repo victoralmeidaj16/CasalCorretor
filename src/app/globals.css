@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #050505;
+  --color-secondary: #111111;
+  --color-accent: #C9974D;
+  --color-gold-soft: #E7D6B7;
+  --color-warm-highlight: #A96B38;
+  --color-text-primary: #F4F1EC;
+  --color-muted: #B7B0A6;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: #050505;
+  color: #F4F1EC;
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9974D40;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C9974D80;
+}
+
+/* Gold glow card hover */
+.card-gold-hover {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.card-gold-hover:hover {
+  box-shadow: 0 0 24px 2px rgba(201, 151, 77, 0.18);
+  border-color: rgba(201, 151, 77, 0.5) !important;
+}
+
+/* Gold input focus & styling */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+textarea,
+select {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: #F4F1EC !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(201, 151, 77, 0.5) !important;
+}
+
+/* Text selection */
+::selection {
+  background-color: rgba(201, 151, 77, 0.3);
+  color: #F4F1EC;
+}
