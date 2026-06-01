@@ -2,7 +2,7 @@ import { MapPin, Maximize2, BedDouble, Bath, Waves } from "lucide-react";
 import { Property } from "@/data/properties";
 
 interface PropertyCardProps {
-  property: Property;
+  property: Property & { imageUrl?: string };
   compact?: boolean;
 }
 
@@ -14,10 +14,25 @@ export function PropertyCard({ property, compact }: PropertyCardProps) {
     >
       {/* Image area */}
       <div className={`relative bg-gradient-to-br ${property.gradient} ${compact ? "h-40" : "h-52"} overflow-hidden`}>
+        {property.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img 
+            src={property.imageUrl} 
+            alt={property.name} 
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          />
+        ) : (
+          /* Decorative icon if no image */
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full border border-accent/10 flex items-center justify-center">
+              <span className="text-accent/20 text-3xl" style={{ fontFamily: "'Cormorant Garamond', serif" }}>AB</span>
+            </div>
+          </div>
+        )}
         {/* Shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-accent/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-accent/5 to-transparent pointer-events-none" />
         {/* Cinematic bottom gradient */}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-secondary to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-secondary to-transparent pointer-events-none" />
         {/* Tag */}
         {property.tag && (
           <span className="absolute top-3 left-3 text-[9px] font-bold tracking-[0.3em] text-primary bg-accent px-2.5 py-1 rounded">
@@ -28,12 +43,6 @@ export function PropertyCard({ property, compact }: PropertyCardProps) {
         <span className="absolute top-3 right-3 text-[9px] font-medium tracking-widest text-accent border border-accent/40 px-2.5 py-1 rounded bg-primary/60 backdrop-blur-sm">
           {property.type}
         </span>
-        {/* Decorative icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full border border-accent/10 flex items-center justify-center">
-            <span className="text-accent/20 text-3xl" style={{ fontFamily: "'Cormorant Garamond', serif" }}>AB</span>
-          </div>
-        </div>
       </div>
 
       {/* Content */}
