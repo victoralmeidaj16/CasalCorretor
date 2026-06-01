@@ -5,8 +5,9 @@ import { AuthLayout } from "@/components/auth-layout";
 import { MaterialCard } from "@/components/material-card";
 import { materials as defaultMaterials, Material } from "@/data/materials";
 import { useAuth } from "@/contexts/AuthContext";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { collection, getDocs, addDoc, query, orderBy } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Plus, X, Upload } from "lucide-react";
 
 const tabs = [
@@ -28,7 +29,9 @@ export default function MateriaisPage() {
   const [subtitle, setSubtitle] = useState("");
   const [size, setSize] = useState("");
   const [duration, setDuration] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   const isAdmin = user?.email === "teste123@gmail.com";
 
@@ -39,7 +42,6 @@ export default function MateriaisPage() {
         const q = query(collection(db, "materials"), orderBy("id", "asc"));
         const snapshot = await getDocs(q);
         if (snapshot.empty) {
-          // If Firestore collection is empty, load default static materials
           setMaterialsList(defaultMaterials);
         } else {
           const list: Material[] = [];
@@ -58,12 +60,34 @@ export default function MateriaisPage() {
     loadMaterials();
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Auto-populate file size
+      const sizeInMb = (selectedFile.size / (1024 * 1024)).toFixed(1);
+      setSize(`${sizeInMb} MB`);
+    }
+  };
+
   const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return;
 
     setSaving(true);
+    setUploadProgress("Salvando...");
     try {
+      let fileUrl = "";
+
+      // Upload file to Firebase Storage if provided
+      if (file) {
+        setUploadProgress("Fazendo upload do arquivo...");
+        const storageRef = ref(storage, `materials/${Date.now()}_${file.name}`);
+        const uploadResult = await uploadBytes(storageRef, file);
+        fileUrl = await getDownloadURL(uploadResult.ref);
+      }
+
       const nextId = materialsList.length > 0 ? Math.max(...materialsList.map((m) => m.id)) + 1 : 1;
       
       // Random sleek gradient
@@ -76,17 +100,18 @@ export default function MateriaisPage() {
       ];
       const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
 
-      const newMaterial: Omit<Material, "id"> & { id: number } = {
+      const newMaterial: Omit<Material, "id"> & { id: number; fileUrl?: string } = {
         id: nextId,
         title,
         type,
         gradient: randomGradient,
+        ...(fileUrl && { fileUrl }),
         ...(subtitle && { subtitle }),
         ...(size && { size }),
         ...(duration && { duration }),
       };
 
-      // Save to Firestore
+      // Save metadata to Firestore
       await addDoc(collection(db, "materials"), newMaterial);
 
       // Update state
@@ -97,12 +122,14 @@ export default function MateriaisPage() {
       setSubtitle("");
       setSize("");
       setDuration("");
+      setFile(null);
       setShowAddModal(false);
     } catch (err) {
       console.error("Error saving material:", err);
-      alert("Erro ao salvar material. Verifique suas regras do banco Firestore.");
+      alert("Erro ao salvar material. Certifique-se de colar as Regras do Firestore no Firebase Console.");
     } finally {
       setSaving(false);
+      setUploadProgress("");
     }
   };
 
@@ -234,7 +261,7 @@ export default function MateriaisPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-[0.15em] text-muted mb-1.5">Tamanho do Arquivo (Opcional)</label>
+                    <label className="block text-[10px] uppercase tracking-[0.15em] text-muted mb-1.5">Tamanho do Arquivo (Auto-popula no upload)</label>
                     <input
                       type="text"
                       value={size}
@@ -257,6 +284,22 @@ export default function MateriaisPage() {
                 </div>
               )}
 
+              {/* Upload de arquivo físico */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.15em] text-muted mb-1.5">Selecionar Arquivo (PDF, Imagem, MP4)</label>
+                <div className="relative border border-dashed border-accent/30 rounded-lg p-4 bg-primary hover:border-accent transition-colors flex flex-col items-center justify-center cursor-pointer">
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <Upload size={18} className="text-accent/60 mb-2" />
+                  <span className="text-[10px] text-muted tracking-wider">
+                    {file ? file.name : "Clique para escolher o arquivo"}
+                  </span>
+                </div>
+              </div>
+
               <div className="pt-2">
                 <button
                   type="submit"
@@ -264,7 +307,7 @@ export default function MateriaisPage() {
                   className="w-full bg-accent text-primary py-2.5 rounded-lg text-[10px] font-semibold tracking-[0.15em] uppercase hover:bg-accent/90 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving ? (
-                    "Salvando..."
+                    uploadProgress
                   ) : (
                     <>
                       <Upload size={12} />
