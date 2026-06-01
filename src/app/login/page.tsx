@@ -1,21 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, authLoading, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
-    }, 800);
+    } catch (err: any) {
+      console.error("Erro ao fazer login:", err);
+      let message = "Ocorreu um erro ao fazer login. Tente novamente.";
+      if (
+        err.code === "auth/invalid-credential" ||
+        err.code === "auth/user-not-found" ||
+        err.code === "auth/wrong-password"
+      ) {
+        message = "E-mail ou senha incorretos.";
+      } else if (err.code === "auth/invalid-email") {
+        message = "Formato de e-mail inválido.";
+      } else if (err.code === "auth/too-many-requests") {
+        message = "Muitas tentativas falhas. A conta foi temporariamente bloqueada.";
+      }
+      setError(message);
+      setLoading(false);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-primary flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-8 w-8 text-accent" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-xs text-muted font-light tracking-[0.2em] uppercase">Carregando...</span>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-primary flex items-center justify-center relative overflow-hidden">
@@ -65,6 +108,11 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
+            {error && (
+              <div className="bg-red-950/20 border border-red-500/30 text-red-200 text-xs rounded-lg p-3 text-center tracking-wide font-light">
+                {error}
+              </div>
+            )}
             <div className="space-y-1.5">
               <label className="block text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">
                 E-mail

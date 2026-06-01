@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   LayoutDashboard,
   Building2,
@@ -30,6 +32,16 @@ const navItems = [
 
 export function Sidebar({ onHide }: { onHide?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-accent/10 flex flex-col z-40">
@@ -105,13 +117,13 @@ export function Sidebar({ onHide }: { onHide?: () => void }) {
           </div>
         </div>
 
-        <Link
-          href="/login"
-          className="flex items-center gap-2 px-3 py-2.5 mt-2 rounded-lg text-xs text-muted/50 hover:text-muted transition-colors duration-200"
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2.5 mt-2 rounded-lg text-xs text-muted/50 hover:text-muted transition-colors duration-200 cursor-pointer text-left"
         >
           <LogOut size={14} strokeWidth={1.5} />
           <span className="tracking-wide">Sair</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );
