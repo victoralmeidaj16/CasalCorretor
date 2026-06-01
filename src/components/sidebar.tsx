@@ -13,6 +13,7 @@ import {
   LogOut,
   Wand2,
   UserCircle,
+  PanelLeftClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,13 +28,24 @@ const navItems = [
   { href: "/perfil-corretor", label: "Perfil Corretor", icon: UserCircle },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onHide }: { onHide?: () => void }) {
   const pathname = usePathname();
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-accent/10 flex flex-col z-40">
       {/* Logo */}
-      <div className="px-6 py-6 border-b border-accent/10">
+      <div className="px-6 py-6 border-b border-accent/10 relative">
+        {onHide && (
+          <button
+            type="button"
+            onClick={onHide}
+            aria-label="Esconder menu lateral"
+            title="Esconder menu"
+            className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted/60 transition-colors hover:bg-white/5 hover:text-accent"
+          >
+            <PanelLeftClose size={17} strokeWidth={1.6} />
+          </button>
+        )}
         <Image
           src="/logo.jpg"
           alt="AB Invest Group"

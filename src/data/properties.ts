@@ -6,6 +6,7 @@ export interface Property {
   size: string;
   bedrooms: number;
   bathrooms: number;
+  distanceToSea: string;
   price: string;
   tag?: string;
   gradient: string;
@@ -20,6 +21,7 @@ export const properties: Property[] = [
     size: "280 m²",
     bedrooms: 4,
     bathrooms: 4,
+    distanceToSea: "80 m do mar",
     price: "R$ 8.500.000",
     tag: "EXCLUSIVO",
     gradient: "from-[#1a0a00] via-[#2c1810] to-[#0a0505]",
@@ -32,6 +34,7 @@ export const properties: Property[] = [
     size: "420 m²",
     bedrooms: 5,
     bathrooms: 5,
+    distanceToSea: "120 m do mar",
     price: "R$ 14.200.000",
     tag: "EXCLUSIVO",
     gradient: "from-[#0a0a1a] via-[#101028] to-[#050510]",
@@ -44,6 +47,7 @@ export const properties: Property[] = [
     size: "650 m²",
     bedrooms: 6,
     bathrooms: 6,
+    distanceToSea: "650 m do mar",
     price: "R$ 6.800.000",
     tag: "EXCLUSIVO",
     gradient: "from-[#001a0a] via-[#0a2810] to-[#000f05]",
@@ -56,6 +60,7 @@ export const properties: Property[] = [
     size: "380 m²",
     bedrooms: 4,
     bathrooms: 4,
+    distanceToSea: "50 m do mar",
     price: "R$ 11.900.000",
     gradient: "from-[#1a0a05] via-[#281505] to-[#0f0500]",
   },
@@ -67,6 +72,7 @@ export const properties: Property[] = [
     size: "520 m²",
     bedrooms: 5,
     bathrooms: 5,
+    distanceToSea: "300 m do mar",
     price: "R$ 4.500.000",
     tag: "EXCLUSIVO",
     gradient: "from-[#0a0505] via-[#1f1008] to-[#050202]",
@@ -79,6 +85,7 @@ export const properties: Property[] = [
     size: "120 m²",
     bedrooms: 2,
     bathrooms: 2,
+    distanceToSea: "100 m do mar",
     price: "R$ 1.850.000",
     gradient: "from-[#050510] via-[#0a0a20] to-[#020208]",
   },

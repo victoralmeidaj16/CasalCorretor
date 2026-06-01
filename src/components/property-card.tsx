@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, Bath } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, Bath, Waves } from "lucide-react";
 import { Property } from "@/data/properties";
 
 interface PropertyCardProps {
@@ -63,6 +63,11 @@ export function PropertyCard({ property, compact }: PropertyCardProps) {
             <Bath size={11} strokeWidth={1.5} className="text-accent/50" />
             {property.bathrooms}
           </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-muted/70 mb-4">
+          <Waves size={12} strokeWidth={1.5} className="text-accent/50 flex-shrink-0" />
+          <span className="font-light">{property.distanceToSea}</span>
         </div>
 
         <div className="mt-auto">

@@ -32,10 +32,10 @@ export default function DashboardPage() {
       {/* Photo Hero */}
       <div className="relative h-[480px] overflow-hidden">
         <Image
-          src="/hero.jpg"
+          src="/MuriloEariHero.png"
           alt="Murilo e Ariane — AB Invest Group"
           fill
-          className="object-cover object-top"
+          className="object-cover object-top -translate-y-[30%] scale-[1.3]"
           priority
         />
         {/* Dark gradient overlay — left to right */}
@@ -64,21 +64,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Main branding */}
-          <div className="max-w-md">
-            <p className="text-[9px] font-semibold tracking-[0.45em] text-[#C9974D]/70 uppercase mb-4">
-              AB Invest Group
-            </p>
-            <h1
-              className="text-5xl font-light text-[#F4F1EC] leading-tight mb-3"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            >
-              Murilo &amp; Ariane
-            </h1>
-            <p className="text-xs text-muted/50 font-light tracking-widest uppercase leading-relaxed">
-              Especialistas em Imóveis de Alto Padrão &nbsp;·&nbsp; Balneário Camboriú
-            </p>
-          </div>
+          <div />
 
           {/* Bottom horizontal gold line */}
           <div className="h-px bg-gradient-to-r from-[#C9974D]/40 via-[#C9974D]/10 to-transparent max-w-xs" />
@@ -122,6 +108,34 @@ export default function DashboardPage() {
       </div>
 
       <div className="px-8 py-10">
+      {/* About AB Invest */}
+      <section className="mb-10 border-y border-accent/10 bg-[#0b0b0b] px-8 py-8">
+        <div className="max-w-5xl">
+          <p className="text-[9px] font-semibold tracking-[0.3em] text-accent/70 uppercase mb-2">
+            Institucional
+          </p>
+          <h2
+            className="text-3xl font-light text-text-primary mb-5"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+          >
+            Sobre a AB Invest
+          </h2>
+          <div className="grid gap-4 text-sm font-light leading-7 text-muted/75 md:grid-cols-2">
+            <p>
+              Foi assim que ficamos conhecidos no mercado imobiliário. Dois profissionais que decidiram unir propósito, conhecimento e profissionalismo para transformar vidas através do mercado imobiliário.
+            </p>
+            <p>
+              Sempre acreditamos que resultado sustentável nasce da ética, do estudo constante e da dedicação em entregar segurança para cada cliente e investidor.
+            </p>
+            <p>
+              Ao longo da trajetória, criamos a AB INVEST GROUP, um ecossistema de negócios imobiliários especializado em alavancagem patrimonial através do mercado imobiliário, conectando investidores de mais de 6 países às oportunidades mais estratégicas de Itapema e Porto Belo, dois dos mercados imobiliários mais valorizados do Brasil.
+            </p>
+            <p>
+              Mais do que negociações milionárias, construímos confiança, autoridade e um legado que continua crescendo todos os dias.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Stat cards */}
       <div className="flex gap-5 mb-10">
