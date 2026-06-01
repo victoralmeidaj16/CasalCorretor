@@ -251,16 +251,6 @@ export default function MateriaisPage() {
               {type !== "video" ? (
                 <>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-[0.15em] text-muted mb-1.5">Dimensões / Formato (Opcional)</label>
-                    <input
-                      type="text"
-                      value={subtitle}
-                      onChange={(e) => setSubtitle(e.target.value)}
-                      placeholder="Ex: 1080 × 1920px ou PDF"
-                      className="w-full bg-primary border border-accent/20 rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-[10px] uppercase tracking-[0.15em] text-muted mb-1.5">Tamanho do Arquivo (Auto-popula no upload)</label>
                     <input
                       type="text"
