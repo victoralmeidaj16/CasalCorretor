@@ -1,5 +1,8 @@
+"use client";
+
 import { Download, Play, FileText } from "lucide-react";
 import { Material } from "@/data/materials";
+
 
 interface MaterialCardProps {
   material: Material & { fileUrl?: string };
