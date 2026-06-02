@@ -31,11 +31,32 @@ Formato: quadrado (1:1) ou retrato (4:5) adequado para Instagram.
 Paleta: tons escuros com detalhes em dourado/âmbar, clean e sofisticado.
 Texto na imagem: mínimo, apenas se explicitamente solicitado.`;
 
+function getGeminiErrorMessage(status: number, body: string): string {
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: {
+        message?: string;
+        status?: string;
+        details?: Array<{ reason?: string }>;
+      };
+    };
+    const reason = parsed.error?.details?.find((detail) => detail.reason)?.reason;
+
+    if (parsed.error?.status === "INVALID_ARGUMENT" || reason === "API_KEY_INVALID") {
+      return "Chave GOOGLE_AI_API_KEY inválida. Gere uma chave válida no Google AI Studio e reinicie o servidor.";
+    }
+
+    return parsed.error?.message ?? `Gemini error ${status}`;
+  } catch {
+    return `Gemini error ${status}: ${body}`;
+  }
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse<GenerateImageResponse>> {
   const body: GenerateImageRequest = await req.json();
   const { prompt, brokerPhotos = [], systemPrompt = "" } = body;
 
-  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_API_KEY?.trim();
   if (!apiKey) {
     return NextResponse.json({ mock: true, error: "GOOGLE_AI_API_KEY não configurada" });
   }
@@ -56,7 +77,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<GenerateImage
 
   parts.push({ text: prompt });
 
-  const model = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3-pro-image-preview";
+  const model = process.env.GEMINI_IMAGE_MODEL ?? "gemini-2.5-flash-image";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const requestBody = {
@@ -79,7 +100,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<GenerateImage
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Gemini error ${response.status}: ${err}`);
+      throw new Error(getGeminiErrorMessage(response.status, err));
     }
 
     const data = await response.json();
