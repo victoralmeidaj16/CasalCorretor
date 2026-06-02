@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Regra básica: qualquer usuário autenticado pode ler e escrever na coleção de materiais
+    match /materials/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Regra padrão para fallback
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

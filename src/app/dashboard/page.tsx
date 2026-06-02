@@ -35,11 +35,9 @@ export default function DashboardPage() {
           src="/MuriloEariHero.png"
           alt="Murilo e Ariane — AB Invest Group"
           fill
-          className="object-cover object-top -translate-y-[30%] scale-[1.3]"
+          className="object-cover object-top -translate-y-[10%] scale-[1.0]"
           priority
         />
-        {/* Dark gradient overlay — left to right */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#070707] via-[#070707]/70 to-transparent" />
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#070707] to-transparent" />
 

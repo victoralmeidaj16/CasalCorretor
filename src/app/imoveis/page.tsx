@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { AuthLayout } from "@/components/auth-layout";
 import { PropertyCard } from "@/components/property-card";
 import { properties as defaultProperties, Property } from "@/data/properties";
-import { SlidersHorizontal, Search, Plus, X, Upload } from "lucide-react";
+import { SlidersHorizontal, Search, Plus, X, Upload, Settings, Trash2, Edit2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { db, storage } from "@/lib/firebase";
-import { collection, getDocs, addDoc, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function ImoveisPage() {
@@ -38,9 +38,14 @@ export default function ImoveisPage() {
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
 
+  const [showDeleteMode, setShowDeleteMode] = useState(false);
+  const [showEditFiltersModal, setShowEditFiltersModal] = useState(false);
+  const [citiesList, setCitiesList] = useState<{ id: string; name: string }[]>([]);
+  const [neighborhoodsList, setNeighborhoodsList] = useState<{ id: string; name: string }[]>([]);
+
   const isAdmin = user?.email === "teste123@gmail.com";
 
-  // Fetch properties
+  // Fetch properties and filters
   useEffect(() => {
     async function loadProperties() {
       try {
@@ -51,7 +56,7 @@ export default function ImoveisPage() {
         } else {
           const list: Property[] = [];
           snapshot.forEach((doc) => {
-            list.push({ id: doc.data().id, ...doc.data() } as Property);
+            list.push({ id: doc.data().id, firestoreId: doc.id, ...doc.data() } as Property & { firestoreId: string });
           });
           setPropertiesList(list);
         }
@@ -62,8 +67,34 @@ export default function ImoveisPage() {
         setLoading(false);
       }
     }
+    async function loadFilters() {
+      try {
+        const citiesSnapshot = await getDocs(collection(db, "cities"));
+        const citiesData = citiesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+        setCitiesList(citiesData);
+
+        const neighborhoodsSnapshot = await getDocs(collection(db, "neighborhoods"));
+        const neighborhoodsData = neighborhoodsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+        setNeighborhoodsList(neighborhoodsData);
+      } catch (err) {
+        console.error("Error loading filters:", err);
+      }
+    }
     loadProperties();
+    loadFilters();
   }, []);
+
+  const handleDeleteProperty = async (firestoreId: string, id: number) => {
+    try {
+      if (firestoreId) {
+        await deleteDoc(doc(db, "properties", firestoreId));
+      }
+      setPropertiesList((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error("Error deleting property:", err);
+      alert("Erro ao excluir o imóvel. Verifique as permissões.");
+    }
+  };
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +115,7 @@ export default function ImoveisPage() {
       const nextId = propertiesList.length > 0 ? Math.max(...propertiesList.map((p) => p.id)) + 1 : 1;
 
       // Clean/formatted location
-      const location = `${bairroInput}, ${cidadeInput}`;
+      const location = `${bairroInput.trim()}, ${cidadeInput.trim()}`;
 
       // Random elegant gradient for fallback background
       const gradients = [
@@ -110,9 +141,25 @@ export default function ImoveisPage() {
         ...(tag && { tag })
       };
 
-      await addDoc(collection(db, "properties"), newProperty);
+      const docRef = await addDoc(collection(db, "properties"), newProperty);
 
-      setPropertiesList((prev) => [...prev, newProperty as Property]);
+      // Check and add to cities if not existing
+      const cleanCity = cidadeInput.trim();
+      const cityExists = citiesList.some(c => c.name.toLowerCase() === cleanCity.toLowerCase());
+      if (!cityExists) {
+        const cityDoc = await addDoc(collection(db, "cities"), { name: cleanCity });
+        setCitiesList(prev => [...prev, { id: cityDoc.id, name: cleanCity }]);
+      }
+
+      // Check and add to neighborhoods if not existing
+      const cleanNeighborhood = bairroInput.trim();
+      const neighborhoodExists = neighborhoodsList.some(n => n.name.toLowerCase() === cleanNeighborhood.toLowerCase());
+      if (!neighborhoodExists) {
+        const neighborhoodDoc = await addDoc(collection(db, "neighborhoods"), { name: cleanNeighborhood });
+        setNeighborhoodsList(prev => [...prev, { id: neighborhoodDoc.id, name: cleanNeighborhood }]);
+      }
+
+      setPropertiesList((prev) => [...prev, { firestoreId: docRef.id, ...newProperty } as Property]);
 
       // Reset Form
       setName("");
@@ -200,13 +247,25 @@ export default function ImoveisPage() {
           </div>
 
           {isAdmin && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.15em] uppercase bg-accent text-primary px-4 py-2.5 rounded-lg hover:shadow-[0_0_15px_rgba(201,151,77,0.4)] transition-all duration-300"
-            >
-              <Plus size={14} />
-              Adicionar ao Portfólio
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowDeleteMode((prev) => !prev)}
+                className={`flex items-center gap-2 text-[10px] font-semibold tracking-[0.15em] uppercase border px-4 py-2.5 rounded-lg transition-all duration-300 ${
+                  showDeleteMode 
+                    ? "bg-red-600 border-red-500 text-white" 
+                    : "border-accent/30 text-accent hover:bg-accent/10"
+                }`}
+              >
+                {showDeleteMode ? "Cancelar Exclusão" : "Modo Edição"}
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.15em] uppercase bg-accent text-primary px-4 py-2.5 rounded-lg hover:shadow-[0_0_15px_rgba(201,151,77,0.4)] transition-all duration-300"
+              >
+                <Plus size={14} />
+                Adicionar ao Portfólio
+              </button>
+            </div>
           )}
         </div>
 
@@ -241,8 +300,8 @@ export default function ImoveisPage() {
             className="bg-secondary border border-accent/20 rounded-lg px-4 py-2.5 text-xs text-muted font-light focus:border-accent/40 focus:outline-none transition-colors"
           >
             <option value="">Todas as Cidades</option>
-            {uniqueCities.map((city) => (
-              <option key={city} value={city}>{city}</option>
+            {citiesList.map((city) => (
+              <option key={city.id} value={city.name}>{city.name}</option>
             ))}
           </select>
 
@@ -252,8 +311,8 @@ export default function ImoveisPage() {
             className="bg-secondary border border-accent/20 rounded-lg px-4 py-2.5 text-xs text-muted font-light focus:border-accent/40 focus:outline-none transition-colors"
           >
             <option value="">Todos os Bairros</option>
-            {uniqueNeighborhoods.map((bairro) => (
-              <option key={bairro} value={bairro}>{bairro}</option>
+            {neighborhoodsList.map((bairro) => (
+              <option key={bairro.id} value={bairro.name}>{bairro.name}</option>
             ))}
           </select>
 
@@ -267,6 +326,16 @@ export default function ImoveisPage() {
             <option value="2">R$ 2M – R$ 6M</option>
             <option value="3">Acima de R$ 6M</option>
           </select>
+
+          {isAdmin && (
+            <button
+              onClick={() => setShowEditFiltersModal(true)}
+              className="flex items-center justify-center p-2.5 bg-secondary border border-accent/20 rounded-lg text-accent hover:bg-accent/10 transition-colors"
+              title="Gerenciar Filtros"
+            >
+              <Settings size={14} />
+            </button>
+          )}
 
           {(search || filterType || filterCidade || filterBairro || filterPrice) && (
             <button
@@ -296,7 +365,12 @@ export default function ImoveisPage() {
         ) : (
           <div className="grid grid-cols-3 gap-5">
             {filtered.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard
+                key={property.id}
+                property={property}
+                showDelete={showDeleteMode}
+                onDelete={handleDeleteProperty}
+              />
             ))}
           </div>
         )}
@@ -466,6 +540,85 @@ export default function ImoveisPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Filters Modal */}
+      {showEditFiltersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-secondary border border-accent/30 w-full max-w-md rounded-xl overflow-hidden shadow-2xl my-8">
+            <div className="px-6 py-4 border-b border-accent/10 flex items-center justify-between">
+              <h3 className="text-sm font-semibold tracking-[0.15em] uppercase text-accent">Gerenciar Filtros</h3>
+              <button onClick={() => setShowEditFiltersModal(false)} className="text-muted hover:text-text-primary">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div>
+                <h4 className="text-xs font-semibold tracking-wider text-accent uppercase mb-3">Cidades</h4>
+                {citiesList.length === 0 ? (
+                  <p className="text-xs text-muted/50 font-light">Nenhuma cidade cadastrada.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {citiesList.map((city) => (
+                      <div key={city.id} className="flex items-center justify-between bg-primary/40 border border-accent/10 rounded-lg px-3 py-2">
+                        <span className="text-xs text-text-primary font-light">{city.name}</span>
+                        <button
+                          onClick={async () => {
+                            if (confirm(`Deseja excluir o filtro de cidade "${city.name}"?`)) {
+                              try {
+                                await deleteDoc(doc(db, "cities", city.id));
+                                setCitiesList(prev => prev.filter(c => c.id !== city.id));
+                              } catch (err) {
+                                console.error("Error deleting city filter:", err);
+                                alert("Erro ao excluir o filtro de cidade.");
+                              }
+                            }
+                          }}
+                          className="text-red-500 hover:text-red-400 p-1 rounded hover:bg-red-500/10 transition-colors"
+                          title="Excluir Filtro"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-xs font-semibold tracking-wider text-accent uppercase mb-3">Bairros</h4>
+                {neighborhoodsList.length === 0 ? (
+                  <p className="text-xs text-muted/50 font-light">Nenhum bairro cadastrado.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {neighborhoodsList.map((bairro) => (
+                      <div key={bairro.id} className="flex items-center justify-between bg-primary/40 border border-accent/10 rounded-lg px-3 py-2">
+                        <span className="text-xs text-text-primary font-light">{bairro.name}</span>
+                        <button
+                          onClick={async () => {
+                            if (confirm(`Deseja excluir o filtro de bairro "${bairro.name}"?`)) {
+                              try {
+                                await deleteDoc(doc(db, "neighborhoods", bairro.id));
+                                setNeighborhoodsList(prev => prev.filter(b => b.id !== bairro.id));
+                              } catch (err) {
+                                console.error("Error deleting neighborhood filter:", err);
+                                alert("Erro ao excluir o filtro de bairro.");
+                              }
+                            }
+                          }}
+                          className="text-red-500 hover:text-red-400 p-1 rounded hover:bg-red-500/10 transition-colors"
+                          title="Excluir Filtro"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
