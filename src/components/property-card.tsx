@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MapPin, Maximize2, BedDouble, Bath, Waves } from "lucide-react";
 import { Property } from "@/data/properties";
 
@@ -88,9 +89,12 @@ export function PropertyCard({ property, compact }: PropertyCardProps) {
               {property.price}
             </p>
           </div>
-          <button className="mt-3 w-full text-xs font-medium tracking-[0.15em] uppercase border border-accent/30 text-accent hover:bg-accent hover:text-primary py-2.5 rounded-lg transition-all duration-200 hover:shadow-[0_0_16px_rgba(201,151,77,0.25)]">
+          <Link 
+            href={`/imoveis/${property.id}`}
+            className="mt-3 w-full inline-flex items-center justify-center text-xs font-medium tracking-[0.15em] uppercase border border-accent/30 text-accent hover:bg-accent hover:text-primary py-2.5 rounded-lg transition-all duration-200 hover:shadow-[0_0_16px_rgba(201,151,77,0.25)]"
+          >
             Ver Detalhes
-          </button>
+          </Link>
         </div>
       </div>
     </div>
