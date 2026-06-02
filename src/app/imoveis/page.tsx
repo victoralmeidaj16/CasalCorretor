@@ -267,6 +267,22 @@ export default function ImoveisPage() {
             <option value="2">R$ 2M – R$ 6M</option>
             <option value="3">Acima de R$ 6M</option>
           </select>
+
+          {(search || filterType || filterCidade || filterBairro || filterPrice) && (
+            <button
+              onClick={() => {
+                setSearch("");
+                setFilterType("");
+                setFilterCidade("");
+                setFilterBairro("");
+                setFilterPrice("");
+              }}
+              className="flex items-center gap-1.5 bg-accent/10 border border-accent/30 rounded-lg px-4 py-2.5 text-xs font-semibold text-accent hover:bg-accent/25 hover:text-text-primary transition-all duration-200"
+            >
+              <X size={12} />
+              Limpar Filtros
+            </button>
+          )}
         </div>
 
         {/* Property grid */}
