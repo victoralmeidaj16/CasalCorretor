@@ -42,13 +42,17 @@ function getGeminiErrorMessage(status: number, body: string): string {
     };
     const reason = parsed.error?.details?.find((detail) => detail.reason)?.reason;
 
-    if (parsed.error?.status === "INVALID_ARGUMENT" || reason === "API_KEY_INVALID") {
+    if (status === 400 && (parsed.error?.status === "INVALID_ARGUMENT" || reason === "API_KEY_INVALID" || parsed.error?.message?.includes("API key"))) {
       return "Chave GOOGLE_AI_API_KEY inválida. Gere uma chave válida no Google AI Studio e reinicie o servidor.";
     }
 
-    return parsed.error?.message ?? `Gemini error ${status}`;
+    if (status === 429 || parsed.error?.status === "RESOURCE_EXHAUSTED") {
+      return "Limite de cota diária ou por minuto excedido no Google AI Studio (Free Tier) para geração de imagem. Tente novamente em instantes.";
+    }
+
+    return parsed.error?.message ?? `Erro na API do Gemini (${status})`;
   } catch {
-    return `Gemini error ${status}: ${body}`;
+    return `Erro na API do Gemini (${status}): ${body}`;
   }
 }
 
