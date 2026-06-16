@@ -16,7 +16,7 @@ export function PropertyCard({ property, compact, showDelete, onDelete, onEdit }
       className={`bg-secondary border border-accent/20 rounded-xl overflow-hidden card-gold-hover flex flex-col relative
         ${compact ? "w-72 flex-shrink-0" : "w-full"}`}
     >
-      {/* Delete/Edit buttons (Admin mode) */}
+      {/* Delete button (Admin mode) */}
       {showDelete && (property.firestoreId || property.id) && (
         <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
           <button
@@ -31,17 +31,6 @@ export function PropertyCard({ property, compact, showDelete, onDelete, onEdit }
             title="Excluir Imóvel"
           >
             <Trash2 size={14} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit?.(property);
-            }}
-            className="bg-accent/90 text-primary p-2 rounded-lg hover:bg-accent transition-all duration-200 shadow-lg"
-            title="Editar Imóvel"
-          >
-            <Edit2 size={14} />
           </button>
         </div>
       )}
@@ -136,8 +125,10 @@ export function PropertyCard({ property, compact, showDelete, onDelete, onEdit }
                   e.stopPropagation();
                   onEdit(property);
                 }}
-                className="flex-1 inline-flex items-center justify-center text-[10px] font-medium tracking-[0.12em] uppercase bg-accent text-primary py-2.5 rounded-lg transition-all duration-200 hover:bg-accent/90 text-center cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 text-[10px] font-medium tracking-[0.12em] uppercase bg-accent text-primary py-2.5 rounded-lg transition-all duration-200 hover:bg-accent/90 text-center cursor-pointer"
+                title="Editar Imóvel"
               >
+                <Edit2 size={12} />
                 Editar
               </button>
             </div>

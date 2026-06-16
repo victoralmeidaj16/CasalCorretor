@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AuthLayout } from "@/components/auth-layout";
 import { PropertyCard } from "@/components/property-card";
 import { properties as defaultProperties, Property } from "@/data/properties";
-import { SlidersHorizontal, Search, Plus, X, Upload, Settings, Trash2, Edit2 } from "lucide-react";
+import { Search, Plus, X, Upload, Settings, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { db, storage } from "@/lib/firebase";
 import { collection, getDocs, addDoc, query, orderBy, deleteDoc, doc, updateDoc } from "firebase/firestore";
@@ -99,6 +99,7 @@ export default function ImoveisPage() {
 
   const handleEditClick = (property: Property & { imageUrl?: string; firestoreId?: string }) => {
     setEditingProperty(property);
+    setShowDeleteMode(false);
     setName(property.name);
     const parts = property.location.split(",");
     setBairroInput(parts[0]?.trim() || "");
@@ -126,6 +127,7 @@ export default function ImoveisPage() {
     setDistanceToSea("");
     setPrice("");
     setTag("");
+    setType("Apartamento");
     setImageFile(null);
   };
 
@@ -299,7 +301,7 @@ export default function ImoveisPage() {
                     : "border-accent/30 text-accent hover:bg-accent/10"
                 }`}
               >
-                {showDeleteMode ? "Cancelar Exclusão" : "Modo Edição"}
+                {showDeleteMode ? "Cancelar Exclusão" : "Modo Exclusão"}
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -413,7 +415,7 @@ export default function ImoveisPage() {
                 property={property}
                 showDelete={showDeleteMode}
                 onDelete={handleDeleteProperty}
-                onEdit={handleEditClick}
+                onEdit={isAdmin ? handleEditClick : undefined}
               />
             ))}
           </div>
