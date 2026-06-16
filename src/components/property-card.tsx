@@ -122,12 +122,33 @@ export function PropertyCard({ property, compact, showDelete, onDelete, onEdit }
               {property.price}
             </p>
           </div>
-          <Link 
-            href={`/imoveis/${property.id}`}
-            className="mt-3 w-full inline-flex items-center justify-center text-xs font-medium tracking-[0.15em] uppercase border border-accent/30 text-accent hover:bg-accent hover:text-primary py-2.5 rounded-lg transition-all duration-200 hover:shadow-[0_0_16px_rgba(201,151,77,0.25)]"
-          >
-            Ver Detalhes
-          </Link>
+          {onEdit ? (
+            <div className="mt-3 flex gap-2 w-full">
+              <Link 
+                href={`/imoveis/${property.id}`}
+                className="flex-1 inline-flex items-center justify-center text-[10px] font-medium tracking-[0.12em] uppercase border border-accent/30 text-accent hover:bg-accent hover:text-primary py-2.5 rounded-lg transition-all duration-200 text-center"
+              >
+                Detalhes
+              </Link>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit(property);
+                }}
+                className="flex-1 inline-flex items-center justify-center text-[10px] font-medium tracking-[0.12em] uppercase bg-accent text-primary py-2.5 rounded-lg transition-all duration-200 hover:bg-accent/90 text-center cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+          ) : (
+            <Link 
+              href={`/imoveis/${property.id}`}
+              className="mt-3 w-full inline-flex items-center justify-center text-xs font-medium tracking-[0.15em] uppercase border border-accent/30 text-accent hover:bg-accent hover:text-primary py-2.5 rounded-lg transition-all duration-200 hover:shadow-[0_0_16px_rgba(201,151,77,0.25)]"
+            >
+              Ver Detalhes
+            </Link>
+          )}
         </div>
       </div>
     </div>

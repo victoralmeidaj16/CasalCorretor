@@ -44,7 +44,7 @@ export default function ImoveisPage() {
   const [neighborhoodsList, setNeighborhoodsList] = useState<{ id: string; name: string }[]>([]);
   const [editingProperty, setEditingProperty] = useState<(Property & { imageUrl?: string; firestoreId?: string }) | null>(null);
 
-  const isAdmin = user?.email === "teste123@gmail.com";
+  const isAdmin = !!user;
 
   // Fetch properties and filters
   useEffect(() => {

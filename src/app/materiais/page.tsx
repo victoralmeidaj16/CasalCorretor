@@ -33,7 +33,7 @@ export default function MateriaisPage() {
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
 
-  const isAdmin = user?.email === "teste123@gmail.com";
+  const isAdmin = !!user;
 
   // Fetch materials
   useEffect(() => {
