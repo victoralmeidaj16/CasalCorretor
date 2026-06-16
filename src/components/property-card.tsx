@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Maximize2, BedDouble, Bath, Waves, Trash2 } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, Bath, Waves, Trash2, Edit2 } from "lucide-react";
 import { Property } from "@/data/properties";
 
 interface PropertyCardProps {
@@ -7,29 +7,43 @@ interface PropertyCardProps {
   compact?: boolean;
   showDelete?: boolean;
   onDelete?: (firestoreId: string, id: number) => void;
+  onEdit?: (property: Property & { imageUrl?: string; firestoreId?: string }) => void;
 }
 
-export function PropertyCard({ property, compact, showDelete, onDelete }: PropertyCardProps) {
+export function PropertyCard({ property, compact, showDelete, onDelete, onEdit }: PropertyCardProps) {
   return (
     <div
       className={`bg-secondary border border-accent/20 rounded-xl overflow-hidden card-gold-hover flex flex-col relative
         ${compact ? "w-72 flex-shrink-0" : "w-full"}`}
     >
-      {/* Delete button (Admin mode) */}
+      {/* Delete/Edit buttons (Admin mode) */}
       {showDelete && (property.firestoreId || property.id) && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (confirm(`Deseja realmente excluir "${property.name}"?`)) {
-              onDelete?.(property.firestoreId || "", property.id);
-            }
-          }}
-          className="absolute top-3 left-3 z-30 bg-red-600/90 text-white p-2 rounded-lg hover:bg-red-700 transition-all duration-200"
-          title="Excluir Imóvel"
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (confirm(`Deseja realmente excluir "${property.name}"?`)) {
+                onDelete?.(property.firestoreId || "", property.id);
+              }
+            }}
+            className="bg-red-600/90 text-white p-2 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-lg"
+            title="Excluir Imóvel"
+          >
+            <Trash2 size={14} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit?.(property);
+            }}
+            className="bg-accent/90 text-primary p-2 rounded-lg hover:bg-accent transition-all duration-200 shadow-lg"
+            title="Editar Imóvel"
+          >
+            <Edit2 size={14} />
+          </button>
+        </div>
       )}
 
       {/* Image area */}

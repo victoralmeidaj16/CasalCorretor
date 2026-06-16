@@ -15,8 +15,18 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase (avoid duplicate initialization on hot reloads)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase (avoid duplicate initialization on hot reloads or missing env keys at build time)
+const hasConfig = !!firebaseConfig.apiKey;
+const app = getApps().length > 0 
+  ? getApp() 
+  : initializeApp(hasConfig ? firebaseConfig : {
+      apiKey: "mock-api-key-for-build",
+      authDomain: "mock-domain.firebaseapp.com",
+      projectId: "mock-project-id",
+      storageBucket: "mock-project-id.appspot.com",
+      appId: "1:123456789:web:123456"
+    });
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);

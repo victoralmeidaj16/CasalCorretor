@@ -7,7 +7,7 @@ import { properties as defaultProperties, Property } from "@/data/properties";
 import { SlidersHorizontal, Search, Plus, X, Upload, Settings, Trash2, Edit2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { db, storage } from "@/lib/firebase";
-import { collection, getDocs, addDoc, query, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, orderBy, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function ImoveisPage() {
@@ -42,6 +42,7 @@ export default function ImoveisPage() {
   const [showEditFiltersModal, setShowEditFiltersModal] = useState(false);
   const [citiesList, setCitiesList] = useState<{ id: string; name: string }[]>([]);
   const [neighborhoodsList, setNeighborhoodsList] = useState<{ id: string; name: string }[]>([]);
+  const [editingProperty, setEditingProperty] = useState<(Property & { imageUrl?: string; firestoreId?: string }) | null>(null);
 
   const isAdmin = user?.email === "teste123@gmail.com";
 
@@ -96,14 +97,46 @@ export default function ImoveisPage() {
     }
   };
 
+  const handleEditClick = (property: Property & { imageUrl?: string; firestoreId?: string }) => {
+    setEditingProperty(property);
+    setName(property.name);
+    const parts = property.location.split(",");
+    setBairroInput(parts[0]?.trim() || "");
+    setCidadeInput(parts[1]?.trim() || "");
+    setType(property.type);
+    setSize(property.size === "N/A" ? "" : property.size);
+    setBedrooms(property.bedrooms);
+    setBathrooms(property.bathrooms);
+    setDistanceToSea(property.distanceToSea === "N/A" ? "" : property.distanceToSea);
+    setPrice(property.price);
+    setTag(property.tag || "");
+    setImageFile(null);
+    setShowAddModal(true);
+  };
+
+  const closeModal = () => {
+    setShowAddModal(false);
+    setEditingProperty(null);
+    setName("");
+    setCidadeInput("");
+    setBairroInput("");
+    setSize("");
+    setBedrooms(3);
+    setBathrooms(3);
+    setDistanceToSea("");
+    setPrice("");
+    setTag("");
+    setImageFile(null);
+  };
+
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !cidadeInput || !bairroInput || !price) return;
 
     setSaving(true);
-    setUploadProgress("Salvando...");
+    setUploadProgress(editingProperty ? "Atualizando..." : "Salvando...");
     try {
-      let imageUrl = "";
+      let imageUrl = editingProperty?.imageUrl || "";
 
       if (imageFile) {
         setUploadProgress("Subindo imagem do imóvel...");
@@ -112,38 +145,62 @@ export default function ImoveisPage() {
         imageUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      const nextId = propertiesList.length > 0 ? Math.max(...propertiesList.map((p) => p.id)) + 1 : 1;
-
-      // Clean/formatted location
       const location = `${bairroInput.trim()}, ${cidadeInput.trim()}`;
 
-      // Random elegant gradient for fallback background
-      const gradients = [
-        "from-[#1a0a00] via-[#2c1810] to-[#0a0505]",
-        "from-[#0a0a1a] via-[#101028] to-[#050510]",
-        "from-[#001a0a] via-[#0a2810] to-[#000f05]",
-        "from-[#1a0a05] via-[#281505] to-[#0f0500]"
-      ];
-      const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+      if (editingProperty) {
+        const updatedData = {
+          name,
+          location,
+          type,
+          size: size || "N/A",
+          bedrooms: Number(bedrooms),
+          bathrooms: Number(bathrooms),
+          distanceToSea: distanceToSea || "N/A",
+          price,
+          ...(imageUrl && { imageUrl }),
+          tag: tag || ""
+        };
 
-      const newProperty = {
-        id: nextId,
-        name,
-        location,
-        type,
-        size: size || "N/A",
-        bedrooms: Number(bedrooms),
-        bathrooms: Number(bathrooms),
-        distanceToSea: distanceToSea || "N/A",
-        price,
-        gradient: randomGradient,
-        ...(imageUrl && { imageUrl }),
-        ...(tag && { tag })
-      };
+        if (editingProperty.firestoreId) {
+          await updateDoc(doc(db, "properties", editingProperty.firestoreId), updatedData);
+        }
 
-      const docRef = await addDoc(collection(db, "properties"), newProperty);
+        setPropertiesList((prev) =>
+          prev.map((p) =>
+            p.id === editingProperty.id
+              ? ({ ...p, ...updatedData } as Property)
+              : p
+          )
+        );
+      } else {
+        const nextId = propertiesList.length > 0 ? Math.max(...propertiesList.map((p) => p.id)) + 1 : 1;
+        const gradients = [
+          "from-[#1a0a00] via-[#2c1810] to-[#0a0505]",
+          "from-[#0a0a1a] via-[#101028] to-[#050510]",
+          "from-[#001a0a] via-[#0a2810] to-[#000f05]",
+          "from-[#1a0a05] via-[#281505] to-[#0f0500]"
+        ];
+        const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
 
-      // Check and add to cities if not existing
+        const newProperty = {
+          id: nextId,
+          name,
+          location,
+          type,
+          size: size || "N/A",
+          bedrooms: Number(bedrooms),
+          bathrooms: Number(bathrooms),
+          distanceToSea: distanceToSea || "N/A",
+          price,
+          gradient: randomGradient,
+          ...(imageUrl && { imageUrl }),
+          ...(tag && { tag })
+        };
+
+        const docRef = await addDoc(collection(db, "properties"), newProperty);
+        setPropertiesList((prev) => [...prev, { firestoreId: docRef.id, ...newProperty } as Property]);
+      }
+
       const cleanCity = cidadeInput.trim();
       const cityExists = citiesList.some(c => c.name.toLowerCase() === cleanCity.toLowerCase());
       if (!cityExists) {
@@ -151,7 +208,6 @@ export default function ImoveisPage() {
         setCitiesList(prev => [...prev, { id: cityDoc.id, name: cleanCity }]);
       }
 
-      // Check and add to neighborhoods if not existing
       const cleanNeighborhood = bairroInput.trim();
       const neighborhoodExists = neighborhoodsList.some(n => n.name.toLowerCase() === cleanNeighborhood.toLowerCase());
       if (!neighborhoodExists) {
@@ -159,23 +215,10 @@ export default function ImoveisPage() {
         setNeighborhoodsList(prev => [...prev, { id: neighborhoodDoc.id, name: cleanNeighborhood }]);
       }
 
-      setPropertiesList((prev) => [...prev, { firestoreId: docRef.id, ...newProperty } as Property]);
-
-      // Reset Form
-      setName("");
-      setCidadeInput("");
-      setBairroInput("");
-      setSize("");
-      setBedrooms(3);
-      setBathrooms(3);
-      setDistanceToSea("");
-      setPrice("");
-      setTag("");
-      setImageFile(null);
-      setShowAddModal(false);
+      closeModal();
     } catch (err) {
       console.error("Error saving property:", err);
-      alert("Erro ao salvar imóvel no Firestore. Verifique as regras do banco.");
+      alert("Erro ao salvar imóvel. Verifique as regras do banco.");
     } finally {
       setSaving(false);
       setUploadProgress("");
@@ -370,6 +413,7 @@ export default function ImoveisPage() {
                 property={property}
                 showDelete={showDeleteMode}
                 onDelete={handleDeleteProperty}
+                onEdit={handleEditClick}
               />
             ))}
           </div>
@@ -387,8 +431,10 @@ export default function ImoveisPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-secondary border border-accent/30 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl my-8">
             <div className="px-6 py-4 border-b border-accent/10 flex items-center justify-between">
-              <h3 className="text-sm font-semibold tracking-[0.15em] uppercase text-accent">Adicionar ao Portfólio</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-text-primary">
+              <h3 className="text-sm font-semibold tracking-[0.15em] uppercase text-accent">
+                {editingProperty ? "Editar Imóvel" : "Adicionar ao Portfólio"}
+              </h3>
+              <button onClick={closeModal} className="text-muted hover:text-text-primary">
                 <X size={18} />
               </button>
             </div>
@@ -536,7 +582,7 @@ export default function ImoveisPage() {
                   disabled={saving}
                   className="w-full bg-accent text-primary py-2.5 rounded-lg text-[10px] font-semibold tracking-[0.15em] uppercase hover:bg-accent/90 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {saving ? uploadProgress : "Salvar no Portfólio"}
+                  {saving ? uploadProgress : (editingProperty ? "Salvar Alterações" : "Salvar no Portfólio")}
                 </button>
               </div>
             </form>
