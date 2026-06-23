@@ -1,19 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Play, FileText, ExternalLink } from "lucide-react";
+import { Download, Play, FileText, ExternalLink, Trash2 } from "lucide-react";
 import { Material } from "@/data/materials";
 
 interface MaterialCardProps {
-  material: Material & { fileUrl?: string };
+  material: Material & { fileUrl?: string; docId?: string };
+  isAdmin?: boolean;
+  onDelete?: () => void;
 }
 
-export function MaterialCard({ material }: MaterialCardProps) {
+export function MaterialCard({ material, isAdmin, onDelete }: MaterialCardProps) {
   return (
-    <div className="bg-secondary border border-accent/20 rounded-xl overflow-hidden card-gold-hover flex flex-col">
+    <div className="bg-secondary border border-accent/20 rounded-xl overflow-hidden card-gold-hover flex flex-col relative group">
       {/* Visual area */}
       <div className={`relative bg-gradient-to-br ${material.gradient} h-36 flex items-center justify-center`}>
         <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 to-transparent" />
+
+        {isAdmin && onDelete && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="absolute top-3 right-3 z-20 w-7 h-7 rounded-full border border-red-900/30 bg-black/70 hover:bg-red-950/80 text-red-400 hover:text-red-300 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
+            title="Apagar Material"
+          >
+            <Trash2 size={13} strokeWidth={2} />
+          </button>
+        )}
 
         {material.type === "video" && (
           <div className="relative z-10 w-12 h-12 rounded-full border border-accent/40 bg-primary/60 backdrop-blur-sm flex items-center justify-center">

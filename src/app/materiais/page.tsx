@@ -6,7 +6,7 @@ import { MaterialCard } from "@/components/material-card";
 import { materials as defaultMaterials, Material } from "@/data/materials";
 import { useAuth } from "@/contexts/AuthContext";
 import { db, storage } from "@/lib/firebase";
-import { collection, getDocs, addDoc, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, orderBy, deleteDoc, doc, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Plus, X, Upload } from "lucide-react";
 
@@ -46,7 +46,7 @@ export default function MateriaisPage() {
         } else {
           const list: Material[] = [];
           snapshot.forEach((doc) => {
-            list.push({ id: doc.data().id, ...doc.data() } as Material);
+            list.push({ id: doc.data().id, ...doc.data(), docId: doc.id } as any);
           });
           setMaterialsList(list);
         }
@@ -59,6 +59,28 @@ export default function MateriaisPage() {
     }
     loadMaterials();
   }, []);
+
+  const handleDeleteMaterial = async (material: Material & { docId?: string }) => {
+    if (!window.confirm(`Tem certeza que deseja apagar o material "${material.title}"?`)) {
+      return;
+    }
+
+    try {
+      if (material.docId) {
+        await deleteDoc(doc(db, "materials", material.docId));
+      } else {
+        const q = query(collection(db, "materials"), where("id", "==", material.id));
+        const snapshot = await getDocs(q);
+        const deletePromises = snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref));
+        await Promise.all(deletePromises);
+      }
+
+      setMaterialsList((prev) => prev.filter((m) => m.id !== material.id));
+    } catch (err) {
+      console.error("Error deleting material:", err);
+      alert("Erro ao apagar o material.");
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -112,10 +134,10 @@ export default function MateriaisPage() {
       };
 
       // Save metadata to Firestore
-      await addDoc(collection(db, "materials"), newMaterial);
+      const docRef = await addDoc(collection(db, "materials"), newMaterial);
 
       // Update state
-      setMaterialsList((prev) => [...prev, newMaterial as Material]);
+      setMaterialsList((prev) => [...prev, { ...newMaterial, docId: docRef.id } as any]);
       
       // Reset form
       setTitle("");
@@ -199,7 +221,12 @@ export default function MateriaisPage() {
         ) : (
           <div className="grid gap-4 grid-cols-4">
             {filtered.map((material) => (
-              <MaterialCard key={material.id} material={material} />
+              <MaterialCard
+                key={material.id}
+                material={material}
+                isAdmin={isAdmin}
+                onDelete={() => handleDeleteMaterial(material)}
+              />
             ))}
           </div>
         )}
